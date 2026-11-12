@@ -2,31 +2,38 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import axios from "axios";
 
-type dataType = {resp: string} | null
+type dataType = { resp: string } | null;
 
 function App() {
   const [data, setData] = useState<dataType>(null);
-  const [isError, setIsError] = useState(false)
-  const errorMessage = "No Data Available"
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get("http://127.0.0.1:8000/health");
+    axios
+      .get("http://127.0.0.1:8000/health")
+      .then((response) => {
+        // throw new Error("blabla")
         setData(response.data);
-
-        console.log(response.headers);
-        console.log(response.status);
-      } catch(error) {
-        console.log("error")
-        setIsError(true)
-      }
-    };
-
-    fetchData()
+      })
+      .catch((error) => {
+        console.error(error);
+        if (axios.isAxiosError(error)) {
+          if (error.response) {
+            setErrorMessage(error.message);
+          } else {
+            setErrorMessage("Could not reach the server");
+          }
+        } else {
+          setErrorMessage(error.message);
+        }
+      });
   }, []);
 
-  return <div className="test">{isError ? errorMessage : data?.resp}</div>;
+  return (
+    <div className="test">
+      {errorMessage != null ? errorMessage : data?.resp}
+    </div>
+  );
 }
 
 export default App;
